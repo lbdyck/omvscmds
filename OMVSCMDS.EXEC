@@ -83,7 +83,7 @@
        'TBSkip omvsucmd Number('row')'
      end
      Select
-        When zcmd = 'CLEAR' then do
+        When translate(zcmd) = 'CLEAR' then do
              'tbclose omvsucmd replcopy library('isptabl')'
              'tberase omvsucmd library('isptabl')'
              'tbcreate omvsucmd keys(ocmd) library('isptabl') write share'
@@ -626,10 +626,10 @@ $Selection ===>_ZCMD                                                          +
 +
 +All commands are saved in a push-down stack except for duplicates.
 +
-+Note that any commands that prompt will$not+work as prompting is not
++Note: Any commands that prompt will$not+work as prompting is not
 +possible using this interface (which is the$bpxwunix+service).
 +
-+
++Using the command$clear+will clean out all the entire command history.
 +
 +
 +  "Life is 10% what happens to you and 90% how you react to it."
