@@ -20,7 +20,7 @@
   parse arg cmd
 
   /* ----------------------------- *
-  | Set ISPExec                                          |
+  | Set ISPExec                   |
   | Get env vars and set defaults |
   * ----------------------------- */
   Address ISPExec
@@ -28,9 +28,6 @@
   call getenv
   dd = 'OC'time('s')
   parse value '' with null osel
-  zerrhm = ''
-  zerralrm = 'NO'
-  zerrtp   = 'NOTIFY'
 
   /* -------------------------------------------------- *
   | Check to see if the user has ISPTABL allocated and |
@@ -121,10 +118,6 @@ do_omvscmd:
   ocmd = omvscmd
   'tbadd omvsucmd'
   x = bpxwunix(ocmd,,so.,se.,env.)
-  zerrsm = 'Completed.'
-  zerrlm = 'The command completed processing. There may, or may not, be' ,
-           'messages. If there are then the messages will be displayed.'
-  'Setmsg msg(isrz003)'
   'vput (ocmd) shared'
   call view_std
   'verase (ocmd)'
