@@ -1,9 +1,14 @@
-  /* --------------------  rexx procedure  -------------------- *
-  | Name:      omvscmds                                        |
+  /* --------------------  rexx procedure  -------------------- */
+  ver = '0.3'
+  /*Name:      omvscmds                                        |
   |                                                            |
   | Function:  Issue any USS command and browse the results    |
   |                                                            |
-  | Syntax:    %omvscmds                                       |
+  | Syntax:    %omvscmds command                               |
+  |                                                            |
+  |            command is optional and may be any shell        |
+  |            command. If it arrives in all CAPS then it      |
+  |            will be translated to all lowercase.            |
   |                                                            |
   | Usage Notes: display a prompt panel with table of recent   |
   |              the localrep ispf variable must be available  |
@@ -14,8 +19,9 @@
   | Author:    Lionel B. Dyck                                  |
   |                                                            |
   | History:  (most recent on top)                             |
-  |            2025/05/27 LBD - Refinement and cleanup         |
-  |            2025/05/26 LBD - Copied from zigigcmd           |
+  |     0.3    2025/05/28 LBD - Accept a command on entry      |
+  |     0.2    2025/05/27 LBD - Refinement and cleanup         |
+  |     0.1    2025/05/26 LBD - Copied from zigigcmd           |
   * ---------------------------------------------------------- */
   parse arg cmd
 
@@ -64,42 +70,50 @@
   |                    omvs command entry field                      |
   * ---------------------------------------------------------------- */
   do forever
-     if ztdsels = 0 then do
+    if cmd = null then do
+      if ztdsels = 0 then do
         'tbtop omvsucmd'
         'tbskip omvsucmd number('ztdtop')'
         'tbdispl omvsucmd panel(omvsucmd) cursor(omvscmd)'
-     end
-     else
-     'tbdispl omvsucmd'
-     if rc > 4 then leave
-     'vput (copt) profile'
-     if row = 0 then osel = null
-     if row <> null then
-     if row > 0 then do
-       'TBTop omvsucmd'
-       'TBSkip omvsucmd Number('row')'
-     end
-     Select
-        When translate(zcmd) = 'CLEAR' then do
-             'tbclose omvsucmd replcopy library('isptabl')'
-             'tberase omvsucmd library('isptabl')'
-             'tbcreate omvsucmd keys(ocmd) library('isptabl') write share'
-             omvscmd = null
-             end
-        When osel = 'D' then 'tbdelete omvsucmd'
-        When osel = 'S' then do
-           omvscmd = ocmd
-           ztdsels = 0
-        end
-        When osel = 'X' then do
-           omvscmd = ocmd
-           ztdsels = 0
-           call do_omvscmd
-        end
-        When omvscmd /= null then call do_omvscmd
-        Otherwise nop
-     end
-     osel = null
+      end
+      else
+      'tbdispl omvsucmd'
+      if rc > 4 then leave
+      'vput (copt) profile'
+      if row = 0 then osel = null
+      if row <> null then
+      if row > 0 then do
+        'TBTop omvsucmd'
+        'TBSkip omvsucmd Number('row')'
+      end
+    end
+    else do
+      x = islower(cmd)
+      if x = 0 then cmd = lower(cmd)
+      omvscmd = cmd
+      cmd = null
+    end
+    Select
+      When translate(zcmd) = 'CLEAR' then do
+        'tbclose omvsucmd replcopy library('isptabl')'
+        'tberase omvsucmd library('isptabl')'
+        'tbcreate omvsucmd keys(ocmd) library('isptabl') write share'
+        omvscmd = null
+      end
+      When osel = 'D' then 'tbdelete omvsucmd'
+      When osel = 'S' then do
+        omvscmd = ocmd
+        ztdsels = 0
+      end
+      When osel = 'X' then do
+        omvscmd = ocmd
+        ztdsels = 0
+        call do_omvscmd
+      end
+      When omvscmd /= null then call do_omvscmd
+      Otherwise nop
+    end
+    osel = null
   end
 
   /* -------------- *
@@ -108,6 +122,24 @@
   'tbclose omvsucmd replcopy library('isptabl')'
   rc = dropispf(load_info)
   exit
+
+  /* ---------------------------------------------------- *
+  | Check if the passed command is all upper case or not |
+  * ---------------------------------------------------- */
+IsLower:
+  parse arg lower
+  upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+  lower = space(translate(lower,' ',upper),0)
+  return length(lower)
+
+  /* ---------------------------- *
+  | Make a string all lower case |
+  * ---------------------------- */
+Lower:
+  parse arg input
+  out = translate(input,"abcdefghijklmnopqrstuvwxyz",,
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+  return out
 
   /* ------------------------------------------------------------- *
   | Execute the git command                                       |
@@ -560,7 +592,7 @@ DropISPF: Procedure
  [ type(output) caps(off) intens(low) skip(on)
  # type(output) hilite(reverse) color(turq) caps(off)
 )Body Expand(\\) Width(&zscreenw)
-+OMVS Commands+\-\#cmdtitle     +\-\------------
++OMVS Commands+\-\#cmdtitle         +\-\------------
 +Command ===>_zcmd                             \ \+Scroll ===>_cscr+
 +
 +Enter any OMVS command:   Browse/View:$z+(B or V)
@@ -573,7 +605,7 @@ DropISPF: Procedure
 )Model
 $z+[ocmd                 \ \ [os
 )Init
- &cmdtitle = 'OMVS Commands'
+ &cmdtitle = 'OMVS Commands &ver'
  .zvars = '(copt osel)'
  .help = omvscmdh
  &cscr = CSR
