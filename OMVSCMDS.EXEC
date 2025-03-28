@@ -1,5 +1,5 @@
   /* --------------------  rexx procedure  -------------------- */
-  ver = '0.3'
+  ver = '0.4'
   /*Name:      omvscmds                                        |
   |                                                            |
   | Function:  Issue any USS command and browse the results    |
@@ -19,6 +19,7 @@
   | Author:    Lionel B. Dyck                                  |
   |                                                            |
   | History:  (most recent on top)                             |
+  |     0.4    2025/05/28 LBD - Improve lower case test        |
   |     0.3    2025/05/28 LBD - Accept a command on entry      |
   |     0.2    2025/05/27 LBD - Refinement and cleanup         |
   |     0.1    2025/05/26 LBD - Copied from zigigcmd           |
@@ -123,14 +124,15 @@
   rc = dropispf(load_info)
   exit
 
-  /* ---------------------------------------------------- *
-  | Check if the passed command is all upper case or not |
-  * ---------------------------------------------------- */
+  /* -------------------------------------------------------- *
+  | Test if the command is all upper case by translating all |
+  | lowercase to ` and then testing for that char            |
+  * -------------------------------------------------------- */
 IsLower:
-  parse arg lower
-  upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-  lower = space(translate(lower,' ',upper),0)
-  return length(lower)
+  parse arg test
+  lower = 'abcdefghijklmnopqrstuvwxyz'
+  test  = space(translate(test,'`',lower),0)
+  return pos('`',test)
 
   /* ---------------------------- *
   | Make a string all lower case |
